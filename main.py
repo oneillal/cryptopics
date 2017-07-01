@@ -11,23 +11,21 @@ class Application(Frame):
 
     def createWidgets(self):
 
-	passlabel = Label(self, text="Enter Key to encrypt/deccrypt image:")
-	passlabel.pack()
-	passg = Entry(self, show="*", width=20)
-	passg.pack()
+	# password entry
+	self.passwdLabel = Label(self, text="Enter Key to encrypt/decrypt image:")
+	self.passwdLabel.pack()
+	self.passwd = Entry(self, show="*", width=20)
+	self.passwd.pack()
 
         self.QUIT = Button(self)
         self.QUIT["text"] = "QUIT"
         self.QUIT["fg"]   = "red"
         self.QUIT["command"] =  self.quit
-
         self.QUIT.pack({"side": "left"})
 
-        self.hi_there = Button(self)
-        self.hi_there["text"] = "SelectImage",
-        self.hi_there["command"] = self.say_hi
-
-        self.hi_there.pack({"side": "left"})
+        self.selectImg= Button(self, text="Select Image")
+        self.selectImg["command"] = self.say_hi
+        self.selectImg.pack({"side": "left"})
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
