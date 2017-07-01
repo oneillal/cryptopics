@@ -13,9 +13,11 @@ All prerequisites are preinstalled on Kali Linux:
 Python 2.7.13`
 
 Clone the Git repo: 
+
 `root@kali:~# **git clone https://github.com/cahlen/IMEncrypt.git**`
 
 Run the program: 
+
 `root@kali:~# **python ./imencrypt.py**`
 
 ```python
