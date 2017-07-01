@@ -10,10 +10,12 @@ Python Modules:
 
 All prerequisites are preinstalled on Kali Linux:
 
-root@kali:~# **python --version**
-Python 2.7.13
+`root@kali:~# **python --version**
+Python 2.7.13`
 
-root@kali:~# **git clone https://github.com/cahlen/IMEncrypt.git**
+Clone the Git repo:
+`root@kali:~# **git clone https://github.com/cahlen/IMEncrypt.git**`
 
-root@kali:~# **python ./imencrypt.py**
+Run the program:
+`root@kali:~# **python ./imencrypt.py**`
 
