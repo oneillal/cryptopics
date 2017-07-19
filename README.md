@@ -17,7 +17,7 @@ The below Python module dependencies are needed to build. These are all pre-inst
 ### Cloning the Git Repo  
 
 ```
-root@kali:~# git clone https://github.com/cahlen/IMEncrypt.git
+root@kali:~# git clone https://github.com/oneillal/cryptopics.git
 ```
 
 ### Running the Program 
