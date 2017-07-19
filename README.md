@@ -3,20 +3,24 @@
 Prerequisites:
   Python >2.7
 
-Python Modules:
+```root@kali:~# python --version
+Python 2.7.13
+```
+
+Dependancies:
+
+Python Modules
   pycrypto
   tkinter
   pillow
 
-All prerequisites are preinstalled on Kali Linux: 
-
-`root@kali:~# python --version 
-
-Python 2.7.13`
+All dependancies needed to run the project are already preinstalled on Kali Linux.
 
 Clone the Git repo: 
 
-`root@kali:~# git clone https://github.com/cahlen/IMEncrypt.git`
+```
+root@kali:~# git clone https://github.com/cahlen/IMEncrypt.git
+```
 
 Run the program: 
 
