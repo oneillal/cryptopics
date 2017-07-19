@@ -1,17 +1,18 @@
 # CryptoPics
 
-*Prerequisites*
+*Prerequisites* 
   Python >2.7
 
-```root@kali:~# python --version 
+```
+root@kali:~# python --version 
 Python 2.7.13
 ```
 
-*Dependancies*
-Python Modules
-⋅⋅* pycrypto
-⋅⋅* tkinter
-⋅⋅* pillow
+*Dependancies* 
+Python Modules 
+⋅⋅* pycrypto 
+⋅⋅* tkinter 
+⋅⋅* pillow 
 
 All dependancies needed to run the project are already preinstalled on Kali Linux.
 
