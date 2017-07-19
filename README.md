@@ -9,7 +9,9 @@ Python Modules:
   pillow
 
 All prerequisites are preinstalled on Kali Linux: 
-`root@kali:~# python --version
+
+`root@kali:~# python --version 
+
 Python 2.7.13`
 
 Clone the Git repo: 
