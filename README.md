@@ -18,11 +18,34 @@ Clone the Git repo:
 
 Run the program: 
 
-``` root@kali:~# cd cryptopics
+``` 
+    root@kali:~# cd cryptopics
     root@kali:~# python ./imencrypt.py```
 
 ```python
-s = "Python syntax highlighting"
-print s
+class Application(Frame):
+
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
+
+
+    def createWidgets(self):
+
+	# password input
+	self.passwdLabel = Label(self, text="Enter password to encrypt/decrypt image:")
+	self.passwdLabel.pack()
+	self.passwd = Entry(self, show="*", width=30)
+	self.passwd.pack()
+
+	# quit button
+        self.quit = Button(self, text="Quit", command=self.quit)
+        self.quit.pack({"side": "bottom"})
+
+	# select image button
+        self.selectImg = Button(self, text="Select Image")
+        self.selectImg["command"] = open_image
+        self.selectImg.pack({"side": "left"})
 ```
 
