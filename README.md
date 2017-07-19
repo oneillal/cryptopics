@@ -24,7 +24,7 @@ root@kali:~# git clone https://github.com/oneillal/cryptopics.git
 
 ``` 
 root@kali:~# cd cryptopics
-root@kali:~# python ./imencrypt.py
+root@kali:~# python ./main.py
 ```
 
 ### Python Code
