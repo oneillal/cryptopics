@@ -19,8 +19,8 @@ Clone the Git repo:
 Run the program: 
 
 ``` 
-    root@kali:~# cd cryptopics
-    root@kali:~# python ./imencrypt.py
+root@kali:~# cd cryptopics
+root@kali:~# python ./imencrypt.py
 ```
 Python Code
 
