@@ -1,34 +1,33 @@
 # CryptoPics
 
-**Prerequisites**  
-  Python >2.7  
+### Prerequisites  
+  * Python >2.7  
 
 ```
 root@kali:~# python --version 
 Python 2.7.13
 ```
 
-**Dependancies**  
-Python Modules 
+### Dependencies  
+The below Python module dependencies are needed to build. These are all pre-installed on Kali Linux.
   * pycrypto  
   * tkinter  
   * pillow  
 
-All dependancies needed to run the project are already preinstalled on Kali Linux.
-
-Clone the Git repo: 
+### Cloning the Git Repo  
 
 ```
 root@kali:~# git clone https://github.com/cahlen/IMEncrypt.git
 ```
 
-Run the program: 
+### Running the Program 
 
 ``` 
 root@kali:~# cd cryptopics
 root@kali:~# python ./imencrypt.py
 ```
-Python Code
+
+### Python Code
 
 ```python
 class Application(Frame):
