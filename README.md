@@ -1,4 +1,4 @@
-# cryptopics
+# CryptoPics
 
 Prerequisites:
   Python >2.7
@@ -18,7 +18,8 @@ Clone the Git repo:
 
 Run the program: 
 
-`root@kali:~# python ./imencrypt.py`
+``` root@kali:~# cd cryptopics
+    root@kali:~# python ./imencrypt.py```
 
 ```python
 s = "Python syntax highlighting"
