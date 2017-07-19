@@ -1,3 +1,4 @@
+
 from Tkinter import *
 from tkFileDialog import *
 import tkMessageBox
@@ -16,68 +17,87 @@ from PIL import Image
 def print_no_pwd_msg():
    	tkMessageBox.showinfo("Password required", "Please enter a password before selecting a file.")
 
+
 def open_image():
 	# check whether a password has been entered
 	if ( app.passwd.get() ):
-		print app.passwd.get()
+		print 'PASSWORD: ' + app.passwd.get()
 		filename = askopenfilename()
         	directory = os.path.dirname(filename)
-		encrypt(filename, app.passwd.get())
+		infile, file_extension = os.path.splitext(filename)
+		
+		if( file_extension == ".cryptopics" ):
+			decrypt( filename, app.passwd.get() )
+		else:
+			encrypt(filename, app.passwd.get())
+	
 	# if no pwd, then show pop-up message
 	else:
 		print_no_pwd_msg()
 
-def encrypt(filename, password):
-	outfilename = filename + ".crypt"
 
+def encrypt(filename, password):
+	outfile = filename + ".cryptopics"
 
 	key_size = 32
 	iterations = 40000
 	hash = SHA512
 	bs = AES.block_size
+	print "BLOCK SIZE: " , bs
 	salt_marker = b'$'
 	header = salt_marker + struct.pack('>H', iterations) + salt_marker
-	#salt = os.urandom(32).encode('hex')
-	salt = Random.new().read( key_size )
 
+	salt = Random.new().read( key_size )
+	
 	kdf = PBKDF2(password, salt, iterations, hash)
-	print kdf
+	print "KDF: " , kdf
 	
 	key = kdf.read(key_size)
-	print key
+	print 'KEY: ' , key
 
-	print AES.block_size
 	iv = Random.new().read( bs )
 	cipher = AES.new(key, AES.MODE_CBC, iv)
+	print 'CIPHER: ' , cipher
 	
-	outfilename = open(outfilename, 'wb')
-	outfilename.write( header + salt )
-	outfilename.write( iv )
+	outfile = open(outfile, 'wb')
+	print 'HEADER: ', header
+	print 'SALT: ', salt
+	outfile.write( header + salt )
+	outfile.write( iv )
+	print 'IV: ' , iv
 
-	filename = open(filename, 'rb')
+	infile = open(filename, 'rb')
 
 	finished = False
 
 	while not finished:
-        	chunk = filename.read(1024 * bs)
+        	chunk = infile.read(1024 * bs)
 
         	if len(chunk) == 0 or len(chunk) % bs != 0:
             		padding_length = (bs - len(chunk) % bs) or bs
             		chunk += (padding_length * chr(padding_length)).encode()
             		finished = True
 
-		outfilename.write(cipher.encrypt(chunk))
+		outfile.write(cipher.encrypt(chunk))
 
 def decrypt(filename, password):
-	outfilename = filename + ".crypt"
+	outfile, file_extension = os.path.splitext(filename)
+	outfile, file_extension = os.path.splitext(outfile)
+	print "OUTFILE: " + outfile
+	#outfilename = filename + ".crypt"
+	outfile = outfile + "_decrypted.png"
+	outfile = open(outfile, 'wb')
+
         key_size = 32
         iterations = 40000
         hash = SHA512
         bs = AES.block_size
+	print 'bs: ', bs
         salt_marker = b'$'
-        header = salt_marker + struct.pack('>H', iterations) + salt_marker
-        #salt = os.urandom(32).encode('hex')
-        salt = Random.new().read( key_size )
+        #header = salt_marker + struct.pack('>H', iterations) + salt_marker
+
+	filename = open(filename, 'rb')
+        salt = filename.read( bs )
 
         kdf = PBKDF2(password, salt, iterations, hash)
         print kdf
@@ -85,9 +105,40 @@ def decrypt(filename, password):
         key = kdf.read(key_size)
         print key
 
-        print AES.block_size
-        iv = Random.new().read( bs )
+        iv = filename.read( bs )
         cipher = AES.new(key, AES.MODE_CBC, iv)
+	
+	next_chunk = b''
+	finished = False
+
+	while not finished:
+        	chunk, next_chunk = next_chunk, cipher.decrypt(infile.read(1024 * bs))
+        	print ("CHUNK: " , chunk)
+        	print ("NEXT_CHUNK: " , next_chunk)
+
+        	if not next_chunk:
+        		padlen = chunk[-1]
+                if isinstance(padlen, str):
+                	padlen = ord(padlen)
+                	padding = padlen * chr(padlen)
+                else:
+                	padding = (padlen * chr(chunk[-1])).encode()
+
+                if padlen < 1 or padlen > bs:
+                	raise ValueError("bad decrypt pad (%d)" % padlen)
+
+                # all the pad-bytes must be the same
+                if chunk[-padlen:] != padding:
+                	# this is similar to the bad decrypt:evp_enc.c
+                	# from openssl program
+                	raise ValueError("bad decrypt")
+
+                chunk = chunk[:-padlen]
+                finished = True
+
+        	outfile.write(chunk)
+
+	
 
 
 
@@ -113,7 +164,7 @@ class Application(Frame):
         self.quit.pack({"side": "bottom"})
 
 	# select image button
-        self.selectImg= Button(self, text="Select Image")
+        self.selectImg = Button(self, text="Select Image")
         self.selectImg["command"] = open_image
         self.selectImg.pack({"side": "left"})
 
