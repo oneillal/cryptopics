@@ -3,15 +3,16 @@ from Tkinter import *
 from tkFileDialog import *
 import tkMessageBox
 import os
-import struct
 from Crypto.Cipher import AES
 from Crypto import Random
 from Crypto.Hash import SHA512
-#from Crypto.Protocol.KDF import PBKDF2
 from pbkdf2 import PBKDF2
-from PIL import Image
 
 
+KEY_SIZE = 32
+ITERATIONS = 40000
+HASH = SHA512
+BLOCK_SIZE = AES.block_size
 
 
 def print_no_pwd_msg():
@@ -21,15 +22,19 @@ def print_no_pwd_msg():
 def open_image():
 	# check whether a password has been entered
 	if ( app.passwd.get() ):
-		print 'PASSWORD: ' + app.passwd.get()
+		
+		# open window to choose the desired file
 		filename = askopenfilename()
-        	directory = os.path.dirname(filename)
+		
+		# extract the file name and its extension
 		infile, file_extension = os.path.splitext(filename)
 		
+		# it will decrypt the file if its extension is .cryptopics
 		if( file_extension == ".cryptopics" ):
 			decrypt( filename, app.passwd.get() )
+		# otherwise it will encrypt
 		else:
-			encrypt(filename, app.passwd.get())
+			encrypt( filename, app.passwd.get() )
 	
 	# if no pwd, then show pop-up message
 	else:
@@ -37,129 +42,127 @@ def open_image():
 
 
 def encrypt(filename, password):
+
+	# append ".cryptopics" to the encrypted file name that will be created
 	outfile = filename + ".cryptopics"
 
-	key_size = 32
-	iterations = 40000
-	hash = SHA512
-	bs = AES.block_size
-	print "BLOCK SIZE: " , bs
-	#salt_marker = b'$'
-	#header = salt_marker + struct.pack('>H', iterations) + salt_marker
-
-	salt = Random.new().read( key_size )
+	# create a 32 byte long random salt
+	salt = Random.new().read( KEY_SIZE )
 	
-	kdf = PBKDF2(password, salt, iterations, hash)
-	print "KDF: " , kdf
+	"""
+		kdf = key derivation function
+		- this function will derive a key from the password
+		- additional security so that when decrypting the image it's necessary
+		  to know the size of the salt hash, the number of iterations, the
+		  hash used, the block size and the password itself
 	
-	key = kdf.read(key_size)
-	print 'KEY: ' , key
+		- References
+		https://www.dlitz.net/software/pycrypto/api/2.6/Crypto.Protocol.KDF-module.html
+		https://en.wikipedia.org/wiki/Rainbow_table
+	"""
+	kdf = PBKDF2(password, salt, ITERATIONS, HASH)
+	
+	# the key created by the kdf will be used to encrypt the data
+	key = kdf.read( KEY_SIZE )
 
-	iv = Random.new().read( bs )
+	"""
+		- create a cypher that we will use to encrypt the data
+		- this cypher is created with a key, a block cipher mode and an IV(initialization vector)
+		- The IV is a data block that is used for encryption and decryption
+
+		- References
+		https://www.dlitz.net/software/pycrypto/api/2.6/Crypto.Cipher.AES-module.html
+		https://www.dlitz.net/software/pycrypto/api/2.6/Crypto.Cipher.blockalgo-module.html#MODE_CBC
+	"""
+	iv = Random.new().read( BLOCK_SIZE )
 	cipher = AES.new(key, AES.MODE_CBC, iv)
-	print 'CIPHER: ' , cipher
 	
+	# open a new file for writing in binary mode
 	outfile = open(outfile, 'wb')
-	#print 'HEADER: ', header
-	print 'SALT: ', salt
-	#outfile.write( header + salt )
-	outfile.write( salt )
-	outfile.write( iv )
-	print 'IV: ' , iv
 
+	# write the salt and the IV
+	outfile.write( salt + iv )
+
+	# open file-to-be-encrypted for reading in binary mode
 	infile = open(filename, 'rb')
 
-	finished = False
+	# this loop will go through the file(picture) until the end.
+	# it will also pad encoded zero's if a chunk of data is not multiple of 16
+	while True:
+		# reads data in chunks of 16KB
+		data = infile.read( 1024 * BLOCK_SIZE )
+		
+		# check whether the length of data is not multiple of 16
+		if  len(data) % BLOCK_SIZE != 0:
+			# find the number of bytes that will need to be filled with zero's
+			data_padding = BLOCK_SIZE - len(data) % BLOCK_SIZE
+			
+			# append the encoded zero's ('\x00') to the data to complete a block of 16 bytes
+			data += (data_padding * chr(0)).encode()
 
-	while not finished:
-        	chunk = infile.read(1024 * bs)
+		# get out of loop when there is no more data to write in to the file
+		if data == '':
+			break
 
-        	if len(chunk) == 0 or len(chunk) % bs != 0:
-			print('len: ', len(chunk))
-			print('len: ', len(chunk) % bs)
-            		padding_length = (bs - len(chunk) % bs) or bs
-            		chunk += (padding_length * chr(padding_length)).encode()
-            		#chunk += (padding_length).encode()
-			print('len: ', len(chunk))
-			print(chr(padding_length))
-			print('CHUNK: \n\n\n', chunk)
-            		finished = True
+		"""
+			- AES(Advanced Encryption Standard) has a fixed data block size of 16 bytes
+			- The data passed in to the encrypt() function must be multiple of 16
+			
+			- References
+			https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+		"""
+		
+		outfile.write(cipher.encrypt(data))
 
-		outfile.write(cipher.encrypt(chunk))
 
 def decrypt(filename, password):
+
+	# extract the file name and its extension
 	outfile, file_extension = os.path.splitext(filename)
+
+	# since we only decrypt ".cryptopics" extension, it needs to extract the file extension twice
 	outfile, file_extension = os.path.splitext(outfile)
-	print "OUTFILE: " + outfile
-	outfile = outfile + "_decrypted.png"
-	#outfilename = filename + ".crypt"
 
-        key_size = 32
-        iterations = 40000
-        hash = SHA512
-        bs = AES.block_size
-	print 'bs: ', bs
-        #salt_marker = b'$'
-        #header = salt_marker + struct.pack('>H', iterations) + salt_marker
+	# appends "_decrypted" to the name of the original file
+	outfile = outfile + "_decrypted" + file_extension
 
+	# open the encrypted file for reading in binary mode
 	infile = open(filename, 'rb')
-        salt = infile.read( key_size )
-	print 'salt: ', salt
 
-        kdf = PBKDF2(password, salt, iterations, hash)
-        print 'kdf: ',kdf
+	# reads the salt from the encrypted file
+        salt = infile.read( KEY_SIZE )
+
+	# derive the key from the password
+        kdf = PBKDF2(password, salt, ITERATIONS, HASH)
         
-        key = kdf.read(key_size)
-        print 'key: ',key
+        key = kdf.read( KEY_SIZE )
 
-        iv = infile.read(bs)
-	print 'iv: ', iv
+	# reads the IV that was put in the file when encrypting it
+        iv = infile.read( BLOCK_SIZE )
+
+	# creates the AES symmetric cipher to decrypt the data
         cipher = AES.new(key, AES.MODE_CBC, iv)
 	
-	next_chunk = b''
-	finished = False
+	# "b''" represents a binary file which is necessary to initialize the file
+	data = b''
 
-	print filename
+	# open a new file to write the decrypted data for writing in binary mode
 	outfile = open(outfile, 'wb')
-	while not finished:
-        	chunk, next_chunk = next_chunk, cipher.decrypt(infile.read(1024 * bs))
-        	#print ("CHUNK: " , chunk)
-		#print('\n\n\n\n\n')
-        	#print ("NEXT_CHUNK: " , next_chunk)
 
-        	if not next_chunk:
-			print 'HERE'
-        		padlen = chunk[-1]
-			print('PADLEN: ',padlen)
-			#print('PADLEN2: ',chunk[-10:-1])
-			print('CCHUNK: ',chunk)
-                	
-			if isinstance(padlen, str):
-				print('string')
-                		padlen = ord(padlen)
-                		padding = padlen * chr(padlen)
-               	 	else:
-                		padding = (padlen * chr(chunk[-1])).encode()
+	# loop to go through the encrypted data in the file
+	while data is not None:
 
-                	if padlen < 1 or padlen > bs:
-                		raise ValueError("bad decrypt pad (%d)" % padlen)
+		# write encrypted data in to the new file
+		outfile.write(data)
 
-                	# all the pad-bytes must be the same
-                	if chunk[-padlen:] != padding:
-                		# this is similar to the bad decrypt:evp_enc.c
-                		# from openssl program
-                		raise ValueError("bad decrypt")
+		# grab chunks of 16KB of decrypted data
+		data = cipher.decrypt(infile.read(1024 * BLOCK_SIZE))
+		
+		# exit the loop when there is no more data to read from the encrypted file
+		if data == '':
+			data = None
 
-                	chunk = chunk[:-padlen]
-                	finished = True
-		print 'DONE'
-        	outfile.write(chunk)
-
-	
-
-
-
-
+# a class to set up a create the GUI
 class Application(Frame):
 
     def __init__(self, master=None):
@@ -183,7 +186,7 @@ class Application(Frame):
 	# select image button
         self.selectImg = Button(self, text="Select Image")
         self.selectImg["command"] = open_image
-        self.selectImg.pack({"side": "left"})
+        self.selectImg.pack()
 
 
 
