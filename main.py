@@ -44,8 +44,8 @@ def encrypt(filename, password):
 	hash = SHA512
 	bs = AES.block_size
 	print "BLOCK SIZE: " , bs
-	salt_marker = b'$'
-	header = salt_marker + struct.pack('>H', iterations) + salt_marker
+	#salt_marker = b'$'
+	#header = salt_marker + struct.pack('>H', iterations) + salt_marker
 
 	salt = Random.new().read( key_size )
 	
@@ -60,9 +60,10 @@ def encrypt(filename, password):
 	print 'CIPHER: ' , cipher
 	
 	outfile = open(outfile, 'wb')
-	print 'HEADER: ', header
+	#print 'HEADER: ', header
 	print 'SALT: ', salt
-	outfile.write( header + salt )
+	#outfile.write( header + salt )
+	outfile.write( salt )
 	outfile.write( iv )
 	print 'IV: ' , iv
 
@@ -74,8 +75,14 @@ def encrypt(filename, password):
         	chunk = infile.read(1024 * bs)
 
         	if len(chunk) == 0 or len(chunk) % bs != 0:
+			print('len: ', len(chunk))
+			print('len: ', len(chunk) % bs)
             		padding_length = (bs - len(chunk) % bs) or bs
             		chunk += (padding_length * chr(padding_length)).encode()
+            		#chunk += (padding_length).encode()
+			print('len: ', len(chunk))
+			print(chr(padding_length))
+			print('CHUNK: \n\n\n', chunk)
             		finished = True
 
 		outfile.write(cipher.encrypt(chunk))
@@ -84,58 +91,68 @@ def decrypt(filename, password):
 	outfile, file_extension = os.path.splitext(filename)
 	outfile, file_extension = os.path.splitext(outfile)
 	print "OUTFILE: " + outfile
-	#outfilename = filename + ".crypt"
 	outfile = outfile + "_decrypted.png"
-	outfile = open(outfile, 'wb')
+	#outfilename = filename + ".crypt"
 
         key_size = 32
         iterations = 40000
         hash = SHA512
         bs = AES.block_size
 	print 'bs: ', bs
-        salt_marker = b'$'
+        #salt_marker = b'$'
         #header = salt_marker + struct.pack('>H', iterations) + salt_marker
 
-	filename = open(filename, 'rb')
-        salt = filename.read( bs )
+	infile = open(filename, 'rb')
+        salt = infile.read( key_size )
+	print 'salt: ', salt
 
         kdf = PBKDF2(password, salt, iterations, hash)
-        print kdf
+        print 'kdf: ',kdf
         
         key = kdf.read(key_size)
-        print key
+        print 'key: ',key
 
-        iv = filename.read( bs )
+        iv = infile.read(bs)
+	print 'iv: ', iv
         cipher = AES.new(key, AES.MODE_CBC, iv)
 	
 	next_chunk = b''
 	finished = False
 
+	print filename
+	outfile = open(outfile, 'wb')
 	while not finished:
         	chunk, next_chunk = next_chunk, cipher.decrypt(infile.read(1024 * bs))
-        	print ("CHUNK: " , chunk)
-        	print ("NEXT_CHUNK: " , next_chunk)
+        	#print ("CHUNK: " , chunk)
+		#print('\n\n\n\n\n')
+        	#print ("NEXT_CHUNK: " , next_chunk)
 
         	if not next_chunk:
+			print 'HERE'
         		padlen = chunk[-1]
-                if isinstance(padlen, str):
-                	padlen = ord(padlen)
-                	padding = padlen * chr(padlen)
-                else:
-                	padding = (padlen * chr(chunk[-1])).encode()
+			print('PADLEN: ',padlen)
+			#print('PADLEN2: ',chunk[-10:-1])
+			print('CCHUNK: ',chunk)
+                	
+			if isinstance(padlen, str):
+				print('string')
+                		padlen = ord(padlen)
+                		padding = padlen * chr(padlen)
+               	 	else:
+                		padding = (padlen * chr(chunk[-1])).encode()
 
-                if padlen < 1 or padlen > bs:
-                	raise ValueError("bad decrypt pad (%d)" % padlen)
+                	if padlen < 1 or padlen > bs:
+                		raise ValueError("bad decrypt pad (%d)" % padlen)
 
-                # all the pad-bytes must be the same
-                if chunk[-padlen:] != padding:
-                	# this is similar to the bad decrypt:evp_enc.c
-                	# from openssl program
-                	raise ValueError("bad decrypt")
+                	# all the pad-bytes must be the same
+                	if chunk[-padlen:] != padding:
+                		# this is similar to the bad decrypt:evp_enc.c
+                		# from openssl program
+                		raise ValueError("bad decrypt")
 
-                chunk = chunk[:-padlen]
-                finished = True
-
+                	chunk = chunk[:-padlen]
+                	finished = True
+		print 'DONE'
         	outfile.write(chunk)
 
 	
