@@ -12,7 +12,6 @@ Python 2.7.13
 The below Python module dependencies are needed to build. These are all pre-installed on Kali Linux.
   * pycrypto  
   * tkinter  
-  * pillow  
 
 ### Cloning the Git Repo  
 
