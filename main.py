@@ -45,8 +45,8 @@ def open_image():
 def encrypt(filename, password):
 
 	# append ".cryptopics" to the encrypted file name that will be created
-	outfilename = filename + ".cryptopics"
-        outfile = outfilename
+	outfile = filename + ".cryptopics"
+        outfilename = outfile
 
 	# create a 32 byte long random salt
 	salt = Random.new().read( KEY_SIZE )
@@ -181,7 +181,7 @@ window = Frame(root, width=720, height=228, background='white')
 window.pack_propagate(0)
 window.pack()
 
-img = PhotoImage(file='res/logo.png')
+img = ImageTk.PhotoImage(file='res/logo.png')
 label = Label(window, image=img, borderwidth=0, relief="groove")
 label.pack()
 
