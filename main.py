@@ -1,3 +1,23 @@
+
+	"""
+		This work was initially based on the following Python image/file encryption programs:
+
+		[1] https://github.com/cahlen/IMEncrypt
+		[2] https://gist.github.com/SpotlightKid/53e1eb408267315de620#file-aescrypt-py
+
+		After we studied them we knew what Python libraries to use and what we would be porting into our code.
+		
+		The UI idea came from [1], which we found it uses the Tkinter library, documenation can be found here:
+		http://infohost.nmt.edu/tcc/help/pubs/tkinter/web/index.html
+	
+		The Crypto and PBKDF2 libraries are used in [2], which we then found all we needed in the documentation here:
+		https://www.dlitz.net/software/pycrypto/api/2.6/
+			
+		More references are used in the code.
+	"""
+
+
+
 import time
 import ttk
 from PIL import ImageTk
@@ -11,10 +31,13 @@ from Crypto import Random
 from Crypto.Hash import SHA512
 from pbkdf2 import PBKDF2
 
+
+# Global variables
 KEY_SIZE = 32
 ITERATIONS = 40000
 HASH = SHA512
 BLOCK_SIZE = AES.block_size
+
 
 def print_no_pwd_msg():
    	tkMessageBox.showinfo("Encryption key required", "Please enter encryption key before selecting a file.")
@@ -48,7 +71,7 @@ def encrypt(filename, password):
 	outfile = filename + ".cryptopics"
         outfilename = outfile
 
-	# create a 32 byte long random salt
+	# create a 32 byte long random salt to be used in the KDF function
 	salt = Random.new().read( KEY_SIZE )
 
 	"""
@@ -57,6 +80,8 @@ def encrypt(filename, password):
 		- additional security so that when decrypting the image it's necessary
 		  to know the size of the salt hash, the number of iterations, the
 		  hash used, the block size and the password itself
+		- using KDF, attackers will be unable to crack the password of the file
+		  using the Rainbow Table attack referenced below
 
 		- References
 		https://www.dlitz.net/software/pycrypto/api/2.6/Crypto.Protocol.KDF-module.html
@@ -82,12 +107,12 @@ def encrypt(filename, password):
 	# open a new file for writing in binary mode
 	outfile = open(outfile, 'wb')
 
-	# write the salt and the IV
+	# write the salt and the IV into the file that will hold all the encrypted data
+	# these two pieces of information is needed to decrypt the image
 	outfile.write( salt + iv )
 
 	# open file-to-be-encrypted for reading in binary mode
 	infile = open(filename, 'rb')
-
 
 	# this loop will go through the file(picture) until the end.
 	# it will also pad encoded zero's if a chunk of data is not multiple of 16
@@ -116,7 +141,11 @@ def encrypt(filename, password):
 		"""
 
 		outfile.write(cipher.encrypt(data))
+
+	# opens a pop-up message with the location of the decrypted file
         tkMessageBox.showinfo("Success", "Image encrypted to file: " + outfilename)
+
+	# clears the password in the GUI
         passwd.delete(0,END)
 
 
@@ -139,6 +168,8 @@ def decrypt(filename, password):
         salt = infile.read( KEY_SIZE )
 
 	# derive the key from the password
+	# the result has to be the same as the key generated when encrypting the file
+	# otherwise the decryption will fail
         kdf = PBKDF2(password, salt, ITERATIONS, HASH)
 
         key = kdf.read( KEY_SIZE )
@@ -167,8 +198,22 @@ def decrypt(filename, password):
 		# exit the loop when there is no more data to read from the encrypted file
 		if data == '':
 			data = None
+
+	# opens a pop-up message with the location of the decrypted file
         tkMessageBox.showinfo("Success", "Image decrypted to file: " + outfilename)
+
+	# clears the password in the GUI
         passwd.delete(0,END)
+
+
+"""
+	The GUI is based on the Tkinter library.
+
+	- Reference
+	https://www.tutorialspoint.com/python/python_gui_programming.htm
+	https://infohost.nmt.edu/tcc/help/pubs/tkinter/web/index.html
+
+"""
 
 # initialize the GUI
 root = Tk()
@@ -188,6 +233,7 @@ label.pack()
 passwdLabel = Label(window, text="Enter encryption key to encrypt/decrypt image:", bg='white')
 passwdLabel.pack()
 
+# password input field
 passwd = Entry(window, show="*", width=30)
 passwd.pack()
 
