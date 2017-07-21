@@ -1,4 +1,6 @@
-# Crypto-Pics
+# Crypto Pics
+
+A Python based image encrypter application developed for NCP Hip in Cyber Security 2017.  
 
 ![alt text](https://github.com/oneillal/cryptopics/raw/master/doc/crypto-pics.png "UI")
 
