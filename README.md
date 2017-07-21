@@ -1,6 +1,5 @@
 # Crypto-Pics
 
-Inline-style: 
 ![alt text](https://github.com/oneillal/cryptopics/raw/master/doc/crypto-pics.png "UI")
 
 ### Prerequisites  
