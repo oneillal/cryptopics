@@ -1,3 +1,18 @@
+"""
+ * Program name: cryptopics/main.py
+  
+ * Version 1.0.0
+ 
+ * Date: 21/07/2017
+    
+ * @references
+        [1] https://github.com/cahlen/IMEncrypt
+        [2] https://gist.github.com/SpotlightKid/53e1eb408267315de620#file-aescrypt-py
+ * @author Jonas Stein- 16136306; Alan O’Neill- 16134427; Mark Hanlon- 16135571; Aislinn Dolan- 16135245
+
+"""
+
+
 
 	"""
 		This work was initially based on the following Python image/file encryption programs:
